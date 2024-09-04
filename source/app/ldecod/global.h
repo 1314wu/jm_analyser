@@ -90,6 +90,7 @@ typedef struct
   int             DbitsLeft;
   byte            *Dcodestrm;
   int             *Dcodestrm_len;
+  int             record;
 } DecodingEnvironment;
 
 typedef DecodingEnvironment *DecodingEnvironmentPtr;
@@ -267,6 +268,8 @@ typedef struct macroblock_dec
   Boolean       luma_transform_size_8x8_flag;
   Boolean       NoMbPartLessThan8x8Flag;
 
+  unsigned int mb_len;
+
   void (*itrans_4x4)(struct macroblock_dec *currMB, ColorPlane pl, int ioff, int joff);
   void (*itrans_8x8)(struct macroblock_dec *currMB, ColorPlane pl, int ioff, int joff);
 
@@ -299,7 +302,7 @@ typedef struct syntaxelement_dec
   #define       TRACESTRING_SIZE 100           //!< size of trace string
   char          tracestring[TRACESTRING_SIZE]; //!< trace string
 #endif
-
+  int           record;
   //! for mapping of CAVLC to syntaxElement
   void  (*mapping)(int len, int info, int *value1, int *value2);
   //! used for CABAC: refers to actual coding method of each individual syntax element type
@@ -528,7 +531,10 @@ typedef struct slice
   int ****wbp_weight; //weight in [list][fw_index][bw_index][component] order
   short wp_round_luma;
   short wp_round_chroma;
-
+  unsigned int coeff_len;
+  unsigned int nal_len;
+  unsigned int intra_mb_nums;
+  unsigned int intra_mb_len;
 #if (MVC_EXTENSION_ENABLE)
   int listinterviewidx0;
   int listinterviewidx1;
@@ -950,6 +956,7 @@ typedef struct video_par
 /******************* end deprecative variables; ***************************************/
 
   struct dec_stat_parameters *dec_stats;
+  FILE* dump_f;
 } VideoParameters;
 
 

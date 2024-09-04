@@ -21,6 +21,7 @@
 #include "global.h"
 #include "memalloc.h"
 #include "biaridecod.h"
+#include "stdio.h"
 
 
 #define B_BITS    10      // Number of bits to represent the whole coding interval
@@ -35,6 +36,7 @@
  *    allocates memory
  ************************************************************************
  */
+extern DecoderParams* p_Dec;
 DecodingEnvironmentPtr arideco_create_decoding_environment()
 {
   DecodingEnvironmentPtr dep;
@@ -72,7 +74,7 @@ void arideco_done_decoding(DecodingEnvironmentPtr dep)
 {
   (*dep->Dcodestrm_len)++;
 #if(TRACE==2)
-  fprintf(p_trace, "done_decoding: %d\n", *dep->Dcodestrm_len);
+  fprintf(p_Dec->p_trace, "done_decoding: %d\n", *dep->Dcodestrm_len);
 #endif
 }
 
@@ -85,7 +87,7 @@ void arideco_done_decoding(DecodingEnvironmentPtr dep)
 static inline unsigned int getbyte(DecodingEnvironmentPtr dep)
 {     
 #if(TRACE==2)
-  fprintf(p_trace, "get_byte: %d\n", (*dep->Dcodestrm_len));
+  fprintf(p_Dec->p_trace, "get_byte: %d\n", (*dep->Dcodestrm_len));
 #endif
   return dep->Dcodestrm[(*dep->Dcodestrm_len)++];
 }
@@ -101,8 +103,8 @@ static inline unsigned int getword(DecodingEnvironmentPtr dep)
   int *len = dep->Dcodestrm_len;
   byte *p_code_strm = &dep->Dcodestrm[*len];
 #if(TRACE==2)
-  fprintf(p_trace, "get_byte: %d\n", *len);
-  fprintf(p_trace, "get_byte: %d\n", *len + 1);
+  fprintf(p_Dec->p_trace, "get_byte: %d\n", *len);
+  fprintf(p_Dec->p_trace, "get_byte: %d\n", *len + 1);
 #endif
   *len += 2;
   return ((*p_code_strm<<8) | *(p_code_strm + 1));
@@ -128,7 +130,7 @@ void arideco_start_decoding(DecodingEnvironmentPtr dep, unsigned char *code_buff
   dep->Drange = HALF;
 
 #if (2==TRACE)
-  fprintf(p_trace, "value: %d firstbyte: %d code_len: %d\n", dep->Dvalue >> dep->DbitsLeft, firstbyte, *code_len);
+  fprintf(p_Dec->p_trace, "value: %d firstbyte: %d code_len: %d\n", dep->Dvalue >> dep->DbitsLeft, firstbyte, *code_len);
 #endif
 }
 
@@ -143,7 +145,10 @@ int arideco_bits_read(DecodingEnvironmentPtr dep)
 { 
 #if (2==TRACE)
   int tmp = ((*dep->Dcodestrm_len) << 3) - dep->DbitsLeft;
-  fprintf(p_trace, "tmp: %d\n", tmp);
+  if (dep->record == 1) 
+  {
+      fprintf(p_Dec->p_trace, "tmp: %d\n", tmp);
+  }
   return tmp;
 #else
  return (((*dep->Dcodestrm_len) << 3) - dep->DbitsLeft);

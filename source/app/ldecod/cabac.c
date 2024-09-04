@@ -805,8 +805,11 @@ void readMB_typeInfo_CABAC_i_slice(Macroblock *currMB,
   se->value1 = curr_mb_type;
 
 #if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
+  if (se->record == 1)
+  {
+      fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n", symbolCount++, se->tracestring, se->value1);
+      fflush(p_Dec->p_trace);
+  }
 #endif
 }
 
@@ -1057,8 +1060,10 @@ void readIntraPredMode_CABAC( Macroblock *currMB,
   }
 
 #if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
+  if (se->record == 1) {
+      fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n", symbolCount++, se->tracestring, se->value1);
+      fflush(p_Dec->p_trace);
+  }
 #endif
 }
 /*!
@@ -1168,8 +1173,10 @@ void read_dQuant_CABAC( Macroblock *currMB,
   currSlice->last_dquant = *dquant;
 
 #if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
+  if (se->record == 1) {
+      fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n", symbolCount++, se->tracestring, se->value1);
+      fflush(p_Dec->p_trace);
+  }
 #endif
 }
 /*!
@@ -1334,8 +1341,10 @@ void readCIPredMode_CABAC(Macroblock *currMB,
     *act_sym = unary_bin_max_decode(dep_dp, ctx->cipr_contexts + 3, 0, 1) + 1;
 
 #if TRACE
-  fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n",symbolCount++, se->tracestring, se->value1);
-  fflush(p_Dec->p_trace);
+  if (se->record == 1) {
+      fprintf(p_Dec->p_trace, "@%-6d %-63s (%3d)\n", symbolCount++, se->tracestring, se->value1);
+      fflush(p_Dec->p_trace);
+  }
 #endif
 
 }
@@ -2151,6 +2160,12 @@ void readRunLevel_CABAC (Macroblock *currMB,
 int readSyntaxElement_CABAC(Macroblock *currMB, SyntaxElement *se, DataPartition *this_dataPart)
 {
   DecodingEnvironmentPtr dep_dp = &(this_dataPart->de_cabac);
+  if (se->record == 1) {
+      dep_dp->record = 1;
+  }
+  else {
+      dep_dp->record = 0;
+  }
   int curr_len = arideco_bits_read(dep_dp);
 
   // perform the actual decoding by calling the appropriate method
@@ -2159,8 +2174,11 @@ int readSyntaxElement_CABAC(Macroblock *currMB, SyntaxElement *se, DataPartition
   se->len = (arideco_bits_read(dep_dp) - curr_len);
 
 #if (TRACE==2)
-  fprintf(p_Dec->p_trace, "curr_len: %d\n",curr_len);
-  fprintf(p_Dec->p_trace, "se_len: %d\n",se->len);
+  if (se->record == 1) 
+  {
+      fprintf(p_Dec->p_trace, "curr_len: %d\n", curr_len);
+      fprintf(p_Dec->p_trace, "se_len: %d\n", se->len);
+  }
 #endif
 
   return (se->len); 

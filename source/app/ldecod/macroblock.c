@@ -215,8 +215,9 @@ void read_delta_quant(SyntaxElement *currSE, DataPartition *dP, Macroblock *curr
     currSE->reading= read_dQuant_CABAC;
 
   TRACE_STRING_P("mb_qp_delta");
+  currSE->record = 1;
 
-  dP->readSyntaxElement(currMB, currSE, dP);
+  currMB->mb_len += dP->readSyntaxElement(currMB, currSE, dP);
   currMB->delta_quant = (short) currSE->value1;
   if ((currMB->delta_quant < -(26 + p_Vid->bitdepth_luma_qp_scale/2)) || (currMB->delta_quant > (25 + p_Vid->bitdepth_luma_qp_scale/2)))
   {

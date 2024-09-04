@@ -231,7 +231,7 @@ int get_annex_b_NALU (VideoParameters *p_Vid, NALU_t *nalu, ANNEXB_t *annex_b)
 #if TRACE
       fprintf (p_Dec->p_trace, "\n\nLast NALU in File\n\n");
       fprintf (p_Dec->p_trace, "Annex B NALU w/ %s startcode, len %d, forbidden_bit %d, nal_reference_idc %d, nal_unit_type %d\n\n",
-        nalu->startcodeprefix_len == 4?"long":"short", nalu->len, nalu->forbidden_bit, nalu->nal_reference_idc, nalu->nal_unit_type);
+        nalu->startcodeprefix_len == 4?"long":"short", nalu->len * 8, nalu->forbidden_bit, nalu->nal_reference_idc, nalu->nal_unit_type);
       fflush (p_Dec->p_trace);
 #endif
       return (pos - 1);
@@ -285,7 +285,7 @@ int get_annex_b_NALU (VideoParameters *p_Vid, NALU_t *nalu, ANNEXB_t *annex_b)
   //printf ("get_annex_b_NALU, regular case: pos %d nalu->len %d, nalu->reference_idc %d, nal_unit_type %d \n", pos, nalu->len, nalu->nal_reference_idc, nalu->nal_unit_type);
 #if TRACE
   fprintf (p_Dec->p_trace, "\n\nAnnex B NALU w/ %s startcode, len %d, forbidden_bit %d, nal_reference_idc %d, nal_unit_type %d\n\n",
-    nalu->startcodeprefix_len == 4?"long":"short", nalu->len, nalu->forbidden_bit, nalu->nal_reference_idc, nalu->nal_unit_type);
+    nalu->startcodeprefix_len == 4?"long":"short", nalu->len*8, nalu->forbidden_bit, nalu->nal_reference_idc, nalu->nal_unit_type);
   fflush (p_Dec->p_trace);
 #endif
 

@@ -113,3 +113,20 @@ Install the needed toolchains:
 pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git subversion mingw-w64-i686-cmake mingw-w64-x86_64-cmake
 ```
 
+analyse  the bits distribution of h264 bitstream 
+===============
+````
+support format yuv420 only now
+````
+usage 
+-----
+```
+1. build ldeode.exe with visual studio
+2. run params like blow:
+  ldecod.exe -p InputFile="C:\work\testseq\foreman_cif_352x288.h264" -p OutputFile="C:\work\testseq\foreman_cif_352x288_dec.yuv"
+3. it will generate a csv file "h264_stream_analysis.csv" under current execute directory, which contians bits distribution of input bitstream
+ the csv file info contain:
+ "poc, totalmbs, frame_len, coeff_len, coeff_percent, intra_nums, intra_len, intra_percent"
+4. if you want to show more info about bitstream , please turn "TRACE" flag in defines.h to "1" or "2"
+```
+

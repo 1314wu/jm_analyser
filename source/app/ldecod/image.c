@@ -804,6 +804,7 @@ static void CopyPOC(Slice *pSlice0, Slice *currSlice)
  *
  ***********************************************************************
  */
+static g_frame_num = 0;
 int decode_one_frame(DecoderParams *pDecoder)
 {
   VideoParameters *p_Vid = pDecoder->p_Vid;
@@ -928,6 +929,11 @@ int decode_one_frame(DecoderParams *pDecoder)
   init_picture_decoding(p_Vid);
 
   {
+      unsigned int frame_coeff_len = 0;
+      unsigned int slice_nal_len = 0;
+      unsigned int slice_intra_len = 0;
+      unsigned int slice_intra_nums = 0;
+      unsigned int slice_total_mbs = 0;
     for(iSliceNo=0; iSliceNo<p_Vid->iSliceNumOfCurrPic; iSliceNo++)
     {
       currSlice = ppSliceList[iSliceNo];
@@ -936,14 +942,26 @@ int decode_one_frame(DecoderParams *pDecoder)
 
       assert(current_header != EOS);
       assert(currSlice->current_slice_nr == iSliceNo);
-
+      //slice_nal_len += (p_Vid->nalu->len * 8);
+      slice_nal_len += currSlice->nal_len *8;
       init_slice(p_Vid, currSlice);
       decode_slice(currSlice, current_header);
-
+      frame_coeff_len += currSlice->coeff_len;
+      slice_intra_len += currSlice->intra_mb_len;
+      slice_intra_nums += currSlice->intra_mb_nums;
+      slice_total_mbs += currSlice->num_dec_mb;
       p_Vid->iNumOfSlicesDecoded++;
       p_Vid->num_dec_mb += currSlice->num_dec_mb;
       p_Vid->erc_mvperMB += currSlice->erc_mvperMB;
     }
+    //"poc,frame_len,coeff_len, coeff_percent,intra_nums,intra_len,intra_percent\n"
+    fprintf(p_Dec->p_Vid->dump_f, "%d,%d,%d,%d,%0.3f,%d,%d,%0.2f\n", 
+          g_frame_num, slice_total_mbs, slice_nal_len, frame_coeff_len, 
+          (float)frame_coeff_len / slice_nal_len, slice_intra_nums, 
+          slice_intra_len, (float)slice_intra_len/ slice_nal_len);
+ 
+    printf("poc %d, slice_size=%d, frame_coeff_len=%d, percent=%0.1f\n", g_frame_num, slice_nal_len, frame_coeff_len, (float)frame_coeff_len / slice_nal_len);
+   // printf("poc %d, coeff_percent=%0.1f\n", ppSliceList[0]->frame_num, (float)frame_coeff_len / slice_nal_len);
   }
 #if MVC_EXTENSION_ENABLE
   p_Vid->last_dec_view_id = p_Vid->dec_picture->view_id;
@@ -956,6 +974,7 @@ int decode_one_frame(DecoderParams *pDecoder)
     p_Vid->last_dec_poc = p_Vid->dec_picture->bottom_poc;
   exit_picture(p_Vid, &p_Vid->dec_picture);
   p_Vid->previous_frame_num = ppSliceList[0]->frame_num;
+  g_frame_num++;
   return (iRet);
 }
 
@@ -1367,7 +1386,8 @@ int read_new_slice(Slice *currSlice)
       nalu = pending_nalu;
       pending_nalu = NULL;
     }
-
+    currSlice->nal_len = nalu->len;
+    printf("nal %d,size %d\n", nalu->nal_unit_type, nalu->len*8);
 #if (MVC_EXTENSION_ENABLE)
     if(p_Inp->DecodeAllLayers == 1 && (nalu->nal_unit_type == NALU_TYPE_PREFIX || nalu->nal_unit_type == NALU_TYPE_SLC_EXT))
     {
@@ -2491,7 +2511,9 @@ void decode_one_slice(Slice *currSlice)
   Boolean end_of_slice = FALSE;
   Macroblock *currMB = NULL;
   currSlice->cod_counter=-1;
-
+  currSlice->coeff_len = 0;
+  currSlice->intra_mb_len = 0;
+  currSlice->intra_mb_nums = 0;
   if( (p_Vid->separate_colour_plane_flag != 0) )
   {
     change_plane_JV( p_Vid, currSlice->colour_plane_id, currSlice );
@@ -2533,13 +2555,18 @@ void decode_one_slice(Slice *currSlice)
       currSlice->num_ref_idx_active[LIST_0] >>= 1;
       currSlice->num_ref_idx_active[LIST_1] >>= 1;
     }
-
+    if (currMB->mb_type > P8x8) 
+    {
+        currSlice->intra_mb_len += currMB->mb_len;
+        currSlice->intra_mb_nums += 1;
+    }
 #if (DISABLE_ERC == 0)
     ercWriteMBMODEandMV(currMB);
 #endif
 
     end_of_slice = exit_macroblock(currSlice, (!currSlice->mb_aff_frame_flag|| currSlice->current_mb_nr%2));
   }
+  printf("intra_mbs_size=%d\n", currSlice->intra_mb_len);
   //reset_ec_flags(p_Vid);
 }
 

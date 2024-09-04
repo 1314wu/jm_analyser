@@ -238,7 +238,12 @@ int main(int argc, char **argv)
     fprintf(stderr, "Open encoder failed: 0x%x!\n", iRet);
     return -1; //failed;
   }
-
+  p_Dec->p_Vid->dump_f = fopen("h264_stream_analysis.csv","w");
+  if (!p_Dec->p_Vid->dump_f) {
+      printf("open trace file error\n");
+      return -1;
+  }
+  fprintf(p_Dec->p_Vid->dump_f, "poc, totalmbs, frame_len, coeff_len, coeff_percent, intra_nums, intra_len, intra_percent\n");
   //decoding;
   do
   {
@@ -258,6 +263,7 @@ int main(int argc, char **argv)
 
   iRet = FinitDecoder(&pDecPicList);
   iFramesOutput += WriteOneFrame(pDecPicList, hFileDecOutput0, hFileDecOutput1 , 1);
+  fclose(p_Dec->p_Vid->dump_f);
   iRet = CloseDecoder();
 
   //quit;
